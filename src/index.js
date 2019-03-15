@@ -1,5 +1,6 @@
 var classCount = require("./class_counter.js");
-const exec = require('child_process').exec;
+var exec = require('child_process').exec;
+var fs = require("fs");
 
 exec(
   `cd ~/src/icisstaff/facesheet/app/templates/components/; git ls-files | egrep "\.hbs$" | gsed "s/\.hbs$//"`,
@@ -21,10 +22,11 @@ exec(
     var data = {};
     components.forEach(function(component, index) {
       data[component] = classCount(component);
-      console.error(`Finished ${index + 1} out of ${components.length}.  ${component}`);
+      process.stdout.write('.');
     });
 
-    console.log(JSON.stringify(data, 2, null));
+    console.log('');
+
+    fs.writeFileSync(process.argv[2], JSON.stringify(data, null, 2));
   }
 );
-
