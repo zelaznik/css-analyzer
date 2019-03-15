@@ -24,7 +24,7 @@ exec(
       console.error(`Finished ${index + 1} out of ${components.length}.  ${component}`);
     });
 
-    console.log(data);
+    console.log(JSON.stringify(data, 2, null));
   }
 );
 
