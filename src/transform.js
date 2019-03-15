@@ -1,5 +1,6 @@
 var looksLike = require('./utils/looks_like.js');
 var sumValues = require('./utils/sum_values.js');
+var sortValuesDesc = require('./utils/sort_values_desc.js');
 
 module.exports = function(state) {
   let classNames, localNames;
@@ -15,6 +16,9 @@ module.exports = function(state) {
         exit: function() {
           state.classCount = sumValues(classNames);
           state.localCount = sumValues(localNames);
+
+          state.classNames = sortValuesDesc(classNames);
+          state.localNames = sortValuesDesc(localNames);
         }
       },
 
