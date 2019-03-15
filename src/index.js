@@ -1,19 +1,30 @@
-var glimmer = require('@glimmer/syntax');
-var parser = require('@babel/parser');
-var fs = require('fs');
+var classCount = require("./class_counter.js");
+const exec = require('child_process').exec;
 
-var transform = require("./transform.js");
+exec(
+  `cd ~/src/icisstaff/facesheet/app/templates/components/; git ls-files | egrep "\.hbs$" | gsed "s/\.hbs$//"`,
+  function (error, stdout, stderr) {
+    if (error !== null) {
+      console.log(`exec error: ${error}`);
+    }
 
-var component_name = 'admissions/admission-form';
-var root_dir = '/Users/steve.zelaznik/src/icisstaff/facesheet/app';
-var hbs_path = `${root_dir}/templates/components/${component_name}.hbs`;
-var js_path = `${root_dir}/components/${component_name}.js`;
+    if (stderr !== '') {
+      console.error(stderr);
+      return;
+    }
 
-var hbs_template = fs.readFileSync(hbs_path) + '';
-var js_code = fs.readFileSync(js_path) + '';
+    var components = stdout
+      .trim()
+      .split('\n')
+      .map((v) => v.trim());
 
-var hbs_ast = glimmer.preprocess(hbs_template, {
-  plugins: {
-    ast: [transform]
+    var data = {};
+    components.forEach(function(component, index) {
+      data[component] = classCount(component);
+      console.error(`Finished ${index + 1} out of ${components.length}.  ${component}`);
+    });
+
+    console.log(data);
   }
-});
+);
+

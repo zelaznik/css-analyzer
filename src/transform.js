@@ -1,9 +1,8 @@
 var looksLike = require('./utils/looks_like.js');
 var sumValues = require('./utils/sum_values.js');
 
-module.exports = function() {
-  let classNames;
-  let localNames;
+module.exports = function(state) {
+  let classNames, localNames;
 
   return {
     name: 'ast-transform',
@@ -14,14 +13,8 @@ module.exports = function() {
           localNames = {};
         },
         exit: function() {
-          const classCount = sumValues(classNames);
-          const localCount = sumValues(localNames);
-          const progress = Math.round(
-            (100 * localCount) / (localCount + classCount)
-          );
-          console.log(
-            `${progress}% complete, ${localCount} local classes, ${classCount} regular classes`
-          );
+          state.classCount = sumValues(classNames);
+          state.localCount = sumValues(localNames);
         }
       },
 
