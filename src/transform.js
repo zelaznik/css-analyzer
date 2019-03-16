@@ -31,7 +31,7 @@ module.exports = function(state) {
               const newName = string
                 .trim()
                 .split(/\s+/)
-                .filter((word) => !/^eng\-/.test(word))
+                .filter((word) => !/^eng[-_]/.test(word))
                 .join(' ');
 
               if (newName == '') {
