@@ -6,13 +6,16 @@ var sumValues = require('./utils/sum_values.js');
 var sortValuesDesc = require('./utils/sort_values_desc.js');
 
 module.exports = function(state) {
-  let classNames, localNames, concatNames;
+  let classNames, localNames, concatNames, mustacheClasses;
+  let attrNodeLayer;
 
   return {
     name: 'ast-transform',
     visitor: {
       Template: {
         enter: function() {
+          attrNodeLayer = 0;
+          mustacheClasses = {};
           concatNames = {};
           classNames = {};
           localNames = {};
@@ -28,60 +31,67 @@ module.exports = function(state) {
         }
       },
 
-      AttrNode(node) {
-        const isRegularClass = looksLike(node, {
-          name: 'class',
-          value: {
-            type: 'TextNode',
-            chars(string) {
-              const newName = string
-                .trim()
-                .split(/\s+/)
-                .filter((word) => !/^eng[-_]/.test(word))
-                .join(' ');
+      AttrNode: {
+        exit() {
+          attrNodeLayer--;
+        },
 
-              if (newName == '') {
-                return;
+        enter(node) {
+          attrNodeLayer++;
+          const isRegularClass = looksLike(node, {
+            name: 'class',
+            value: {
+              type: 'TextNode',
+              chars(string) {
+                const newName = string
+                  .trim()
+                  .split(/\s+/)
+                  .filter((word) => !/^eng[-_]/.test(word))
+                  .join(' ');
+
+                if (newName == '') {
+                  return;
+                }
+
+                addOne(classNames, newName);
+                return true;
               }
-
-              addOne(classNames, newName);
-              return true;
             }
+          });
+
+          const isComputedClass = looksLike(node, {
+            name: 'class',
+            value: {
+              type: (t) => t === 'MustacheStatement' || t === 'ConcatStatement'
+            }
+          });
+
+          if (isComputedClass) {
+            let newName = glimmer
+              .print(node.value)
+              .replace(/^[\"\']/, '')
+              .replace(/[\'\"]$/, '');
+
+            addOne(classNames, newName);
           }
-        });
 
-        const isComputedClass = looksLike(node, {
-          name: 'class',
-          value: {
-            type: (t) => t === 'MustacheStatement' || t === 'ConcatStatement'
-          }
-        });
+          const isLocalClass = looksLike(node, {
+            name: 'local-class',
+            value: {
+              type: 'TextNode',
+              chars(string) {
+                const newName = string
+                  .trim()
+                  .split(/\s+/)
+                  .sort()
+                  .join(' ');
 
-        if (isComputedClass) {
-          let newName = glimmer
-            .print(node.value)
-            .replace(/^[\"\']/, '')
-            .replace(/[\'\"]$/, '');
-
-          addOne(classNames, newName);
+                addOne(localNames, newName);
+                return true;
+              }
+            }
+          });
         }
-
-        const isLocalClass = looksLike(node, {
-          name: 'local-class',
-          value: {
-            type: 'TextNode',
-            chars(string) {
-              const newName = string
-                .trim()
-                .split(/\s+/)
-                .sort()
-                .join(' ');
-
-              addOne(localNames, newName);
-              return true;
-            }
-          }
-        });
       }
     }
   };
